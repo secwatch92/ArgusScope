@@ -1,0 +1,42 @@
+# Workflow to perform security scans on the codebase and Docker image
+name: Security Scan
+
+# Triggers the workflow on push or pull request events for the main branch
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  security-scan:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checks out your repository's code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Runs Bandit, a Static Application Security Testing (SAST) tool for Python
+      # It scans the source code for common security issues.
+      - name: Run Bandit (SAST Scanner)
+        uses: jpetrucciani/bandit-check@main
+        with:
+          path: 'argus_scope/'
+
+      # Step 3: Builds the Docker image locally to be scanned in the next step
+      - name: Build the Docker image
+        run: docker build --tag argusscope-image:latest .
+
+      # Step 4: Scans the built Docker image for vulnerabilities using Trivy
+      # Trivy checks for known CVEs in OS packages and application dependencies.
+      - name: Scan Docker image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'argusscope-image:latest'
+          format: 'table'
+          exit-code: '1'             # Fail the build if vulnerabilities are found
+          ignore-unfixed: true       # Don't fail for vulnerabilities that don't have a fix yet
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'  # Only fail for Critical and High severity issues
