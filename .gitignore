@@ -1,0 +1,34 @@
+# پوشه‌ها و فایل‌های موقت
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.swo
+
+# محیط‌های مجازی
+venv/
+env/
+.venv/
+
+# فایل‌های IDE
+.vscode/
+.idea/
+
+# لاگ‌ها و گزارش‌ها
+logs/
+*.log
+
+# داده‌های محرمانه
+.env
+secrets.yaml
+
+# دیتابیس
+*.db
+*.sqlite3
+data/
+
+# گزارش‌های خروجی (نمونه)
+reports/html/*
+reports/pdf/*
+reports/json/*
