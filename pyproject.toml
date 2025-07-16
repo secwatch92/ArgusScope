@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "argus_scope"
+version = "1.0.0"
+description = "A comprehensive reconnaissance and vulnerability scanning framework."
+authors = ["Your Name <your.email@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.116.1"
+uvicorn = {extras = ["standard"], version = "^0.29.0"}
+pymongo = "^4.8.0"
+elasticsearch = "^8.0"
+requests = "^2.31.0"
+python-dotenv = "^1.0.0"
+alembic = "^1.13.1"
+pandas = "^2.1.3"
+python-multipart = "^0.0.9"
+numpy = "^1.26.2"
+dnspython = "^2.7.0"
+httpx = "^0.27.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.0"
+pytest-cov = "^4.1.0"
+locust = "^2.20.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -3,18 +3,18 @@ version: '3.9'
 services:
   argusscope:
     build: .
-    ports:
-      - "8000:8000"
     volumes:
       - .:/app
+    environment:
+      - DATABASE_URL=mongodb://mongodb:27017/argusdb
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on:
       - mongodb
       - elasticsearch
+    command: uvicorn argus_scope.api.server:app --host 0.0.0.0 --port 8000
 
   mongodb:
     image: mongo:8.0
-    ports:
-      - "27017:27017"
     volumes:
       - mongodb_data:/data/db
 
@@ -23,8 +23,7 @@ services:
     environment:
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
-    ports:
-      - "9200:9200"
+      - xpack.security.enabled=false
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
 

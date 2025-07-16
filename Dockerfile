@@ -1,37 +1,37 @@
-# --- Stage 1: Select the Base Image ---
-# We use an official and slim Python image as the base.
+# New and optimized Dockerfile for use with Poetry
+
+# --- Base Image ---
 FROM python:3.12-slim
 
-# --- Stage 2: Environment Settings ---
-# These environment variables help improve Python's performance in a Docker environment.
-ENV PYTHONDONTWRITEBYTECODE 1  # Prevents Python from creating .pyc files
-ENV PYTHONUNBUFFERED 1         # Sends logs directly to the Docker console, preventing buffering
+# --- Environment Settings ---
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+# Tell Poetry not to create a virtual environment inside the project directory
+# and configure it for a non-interactive environment.
+ENV POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_CREATE=false \
+    POETRY_CACHE_DIR='/var/cache/pypoetry'
 
-# --- Stage 3: Install Dependencies ---
-# Set the working directory inside the container.
+# --- Working Directory ---
 WORKDIR /app
 
-# First, copy only the requirements file.
-# This makes optimal use of Docker's layer caching feature.
-# If this file doesn't change, Docker won't re-run this step in subsequent builds, which speeds up the process.
-COPY requirements.txt .
+# --- Install Poetry ---
+RUN pip install poetry
 
-# Upgrade pip and then install the required libraries.
-# --no-cache-dir reduces the image size.
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# --- Install Dependencies ---
+# First, copy only the dependency files to leverage Docker's layer cache.
+# This step is only re-run when pyproject.toml or poetry.lock changes.
+COPY pyproject.toml poetry.lock ./
 
-# --- Stage 4: Copy the Project Source Code ---
-# Now that the dependencies are installed, copy all the project source code into the container.
-# This code will be overlaid by the volume mount in development mode.
+# Install main dependencies (without development packages like pytest).
+RUN poetry install --no-root --only main
+
+# --- Copy Project Source Code ---
 COPY . .
 
-# --- Stage 5: Define Port and Execution Command ---
-# Inform Docker which port our application will run on.
+# --- Define Port and Execution Command ---
 EXPOSE 8000
 
-# The default command that runs when the container starts.
-# This command starts the Uvicorn web server to run your API (built with FastAPI).
-# It assumes that your main API file is located at argus_scope/api/server.py and the main variable is named 'app'.
+# Run the application using Poetry.
 # The --reload flag enables hot-reloading for development.
-CMD ["uvicorn", "argus_scope.api.server:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["poetry", "run", "uvicorn", "argus_scope.api.server:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
