@@ -1,4 +1,4 @@
-# پوشه‌ها و فایل‌های موقت
+# Temporary folders and files
 __pycache__/
 *.pyc
 *.pyo
@@ -6,29 +6,43 @@ __pycache__/
 *.swp
 *.swo
 
-# محیط‌های مجازی
+# Virtual environments
+
 venv/
 env/
 .venv/
 
-# فایل‌های IDE
+# IDE files
 .vscode/
 .idea/
 
-# لاگ‌ها و گزارش‌ها
+# Logs and reports
 logs/
 *.log
 
-# داده‌های محرمانه
+# Sensitive data
 .env
 secrets.yaml
 
-# دیتابیس
+# Database
 *.db
 *.sqlite3
 data/
 
-# گزارش‌های خروجی (نمونه)
+# Output reports (samples)
 reports/html/*
 reports/pdf/*
 reports/json/*
+
+# Add new items
+.env
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
