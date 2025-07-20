@@ -1,5 +1,5 @@
 import asyncio
-import subprocess
+import subprocess  # nosec B404
 from datetime import datetime
 from typing import List
 
