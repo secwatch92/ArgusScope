@@ -9,21 +9,20 @@ RUN apt-get update && apt-get install -y \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Install the subfinder tool from GitHub
-RUN wget https://github.com/projectdiscovery/subfinder/releases/download/v2.6.5/subfinder_2.6.5_linux_amd64.zip && \
-    unzip subfinder_2.6.5_linux_amd64.zip && \
+# --- Corrected: Install the latest secure version of subfinder (v2.8.0) ---
+RUN wget https://github.com/projectdiscovery/subfinder/releases/download/v2.8.0/subfinder_2.8.0_linux_amd64.zip && \
+    unzip subfinder_2.8.0_linux_amd64.zip && \
     mv subfinder /usr/local/bin/ && \
     rm subfinder_2.8.0_linux_amd64.zip
 
 # Poetry Environment Configuration
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 ENV POETRY_NO_INTERACTION=1 \
     POETRY_CACHE_DIR='/var/cache/pypoetry' \
     POETRY_VIRTUALENVS_IN_PROJECT=true
 
-# --- Key change: Add the virtual environment path to PATH ---
-# This ensures that all tools installed by Poetry are directly accessible.
+# Add the virtual environment's bin directory to the PATH
 ENV VENV_PATH=/app/.venv
 ENV PATH="$VENV_PATH/bin:$PATH"
 
@@ -51,5 +50,4 @@ FROM base AS production
 RUN poetry install --no-root --only main
 COPY . .
 EXPOSE 8000
-# Now we can run uvicorn directly
 CMD ["uvicorn", "argus_scope.api.server:app", "--host", "0.0.0.0", "--port", "8000"]
