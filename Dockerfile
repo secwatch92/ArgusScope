@@ -1,37 +1,55 @@
-# New and optimized Dockerfile for use with Poetry
+# =================================================================
+#  Base Stage – Common base layer
+# =================================================================
+FROM python:3.12-slim AS base
 
-# --- Base Image ---
-FROM python:3.12-slim
+# Install required OS tools to download and extract subfinder
+RUN apt-get update && apt-get install -y \
+    unzip \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
 
-# --- Environment Settings ---
+# Install the subfinder tool from GitHub
+RUN wget https://github.com/projectdiscovery/subfinder/releases/download/v2.6.5/subfinder_2.6.5_linux_amd64.zip && \
+    unzip subfinder_2.6.5_linux_amd64.zip && \
+    mv subfinder /usr/local/bin/ && \
+    rm subfinder_2.6.5_linux_amd64.zip
+
+# Adjusted environment settings for Poetry integration
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
-# Tell Poetry not to create a virtual environment inside the project directory
-# and configure it for a non-interactive environment.
 ENV POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_CACHE_DIR='/var/cache/pypoetry'
+    POETRY_CACHE_DIR='/var/cache/pypoetry' \
+    POETRY_VIRTUALENVS_IN_PROJECT=true
 
-# --- Working Directory ---
+# --- Key change: Add the virtual environment path to PATH ---
+# This ensures that all tools installed by Poetry are directly accessible.
+ENV VENV_PATH=/app/.venv
+ENV PATH="$VENV_PATH/bin:$PATH"
+
 WORKDIR /app
-
-# --- Install Poetry ---
-RUN pip install poetry
-
-# --- Install Dependencies ---
-# First, copy only the dependency files to leverage Docker's layer cache.
-# This step is only re-run when pyproject.toml or poetry.lock changes.
+RUN pip install --no-cache-dir poetry
 COPY pyproject.toml poetry.lock ./
 
-# Install main dependencies (without development packages like pytest).
-RUN poetry install --no-root --only main
+# =================================================================
+#  Test Stage – Testing-specific layer
+# =================================================================
+FROM base AS test
 
-# --- Copy Project Source Code ---
+# Install all dependencies in the project's virtual environment
+RUN poetry install --no-root
 COPY . .
+# Now we can run the command directly
+CMD ["pytest"]
 
-# --- Define Port and Execution Command ---
+# =================================================================
+#  Production Stage – Final and optimized layer
+# =================================================================
+FROM base AS production
+
+# Install only the main dependencies in the project's virtual environment
+RUN poetry install --no-root --only main
+COPY . .
 EXPOSE 8000
-
-# Run the application using Poetry.
-# The --reload flag enables hot-reloading for development.
-CMD ["poetry", "run", "uvicorn", "argus_scope.api.server:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Now we can run uvicorn directly
+CMD ["uvicorn", "argus_scope.api.server:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,17 +1,37 @@
-version: '3.9'
-
 services:
+# Main service for running in development and production environments
   argusscope:
-    build: .
+    build:
+      context: .
+      target: production
+    ports:
+      - "8001:8000"  # <--- Port changed to 8001
     volumes:
       - .:/app
+      - /app/.venv
     environment:
       - DATABASE_URL=mongodb://mongodb:27017/argusdb
       - ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on:
       - mongodb
       - elasticsearch
-    command: uvicorn argus_scope.api.server:app --host 0.0.0.0 --port 8000
+    command: poetry run uvicorn argus_scope.api.server:app --host 0.0.0.0 --port 8000
+
+# New service, only for running tests
+  tests:
+    build:
+      context: .
+      target: test
+    volumes:
+      - .:/app
+      - /app/.venv
+    environment:
+      - DATABASE_URL=mongodb://mongodb:27017/argusdb_test
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on:
+      - mongodb
+      - elasticsearch
+    command: ["poetry", "run", "pytest"]
 
   mongodb:
     image: mongo:8.0
@@ -25,7 +45,7 @@ services:
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
       - xpack.security.enabled=false
     volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
+      - elasticsearch_data:/data/db
 
 volumes:
   mongodb_data:
